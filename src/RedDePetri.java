@@ -1,12 +1,12 @@
-package org.compurrentes;
+package src;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.RealVector;
-import org.apache.log4j.Logger;
-import org.compurrentes.beans.SensitizedVector;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+
 
 
 
@@ -92,5 +92,7 @@ public class RedDePetri {
     public RealVector EcuacionDeEstado()
     {
         RealVector ecuacion = matrizIncidencia.preMultiply(vectorDisparos).add(marcadoInicial);
+        return ecuacion;
     }
+
 }
