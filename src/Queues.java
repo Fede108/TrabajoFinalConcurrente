@@ -1,7 +1,9 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
@@ -34,8 +36,26 @@ public class Queues {
         }
     }
 
-    public void release(double maxValue) {
-       queues.get((int)maxValue).release();
+    /**
+     * Despierta un hilo cualquiera cuyo semáforo esté marcado con 1 en el vector resultado.
+     * Si hay varias posiciones con 1, elige una al azar y hace release() de su semáforo.
+     * Si no hay ninguna con valor 1, no hace nada.
+     */
+    public void release(RealVector resultado) {
+        List<Integer> candidatos = new ArrayList<>();
+        for (int i = 0; i < resultado.getDimension(); i++) {
+            if (resultado.getEntry(i) == 1.0) {
+                candidatos.add(i);
+            }
+        }
+        if (!candidatos.isEmpty()) {
+            // Elige índice aleatorio entre los candidatos
+            int elegido   = candidatos.get(ThreadLocalRandom.current().nextInt(candidatos.size()));
+            Semaphore sem = queues.get(elegido);
+            sem.release();
+            // Opcional: imprimir o log para depuración
+            System.out.printf("Release en semáforo de T%d%n", elegido);
+        }
     }
 
 }

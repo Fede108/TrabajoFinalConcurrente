@@ -8,7 +8,7 @@ import org.apache.commons.math3.linear.RealVector;
 
 public class Monitor implements MonitorInterface {
 
-    private final Semaphore mutex = new Semaphore(1);
+    private final Semaphore mutex = new Semaphore(1,false);
     private RedDePetri red;
     private Queues queues;
     private boolean disparoExitoso;
@@ -34,16 +34,20 @@ public class Monitor implements MonitorInterface {
         try {
 
             while (true) {
-                disparoExitoso = red.disparar(transition);
-
+                disparoExitoso = red.EcuacionDeEstado(transition);
                 if(disparoExitoso)
                 { 
-                    sensibilizadas = (RealVector) red.getSensibilizadas();
+                    System.out.println("Transicion " + transition);
+                    // mostrar marcado actual
+                    red.imprimirMarcado();
+                    
+                    sensibilizadas = red.getSensibilizadas();
                     quienesEstan   = queues.quienesEstan();
                     resultado = sensibilizadas.ebeMultiply(quienesEstan);
 
                     if (resultado.getMaxValue() > 0) {
-                        queues.release(resultado.getMaxValue());
+                        queues.release(resultado);
+                        return true;
                     } 
 
                     return true;
@@ -59,7 +63,6 @@ public class Monitor implements MonitorInterface {
                     }
                 }
             }
-            
         }
         finally {
             mutex.release();

@@ -30,8 +30,7 @@ public class RedDePetri {
         this.matrizIncidencia = MatrixUtils.createRealMatrix(matrizIncidencia);
         this.marcado = MatrixUtils.createRealVector(marcado);
         this.marcadoInicial = this.marcado.copy();
-        this.vectorDisparos = new ArrayRealVector(this.matrizIncidencia.getRowDimension());
-
+        this.vectorDisparos = new ArrayRealVector(this.matrizIncidencia.getColumnDimension());
     }
 
 
@@ -42,12 +41,15 @@ public class RedDePetri {
         return MatrixUtils.createRealVector(vector);
     }
 
-    public List<Integer> getSensibilizadas()
+    public RealVector getSensibilizadas()
     {
-        List<Integer> sensibilizadas = new ArrayList<>();
-        for(int transicion = 0; transicion<matrizIncidencia.getRowDimension(); transicion++)
+        int numTrans = matrizIncidencia.getColumnDimension(); // 6
+        RealVector sensibilizadas = new ArrayRealVector(numTrans);
+
+        for(int transicion = 0; transicion<numTrans; transicion++)
         {
-            RealVector resultado = marcado.add(matrizIncidencia.getRowVector(transicion));
+            RealVector columna   = matrizIncidencia.getColumnVector(transicion);
+            RealVector resultado = marcado.add(columna);
             boolean valido = true;
             for(double valor: resultado.toArray())
             {
@@ -57,26 +59,10 @@ public class RedDePetri {
                     break;
                 }
             }
-            if(valido)
-            {
-                sensibilizadas.add(transicion);
-            }
+
+            sensibilizadas.setEntry(transicion, valido ? 1.0 : 0.0);
         }
         return sensibilizadas;
-    }
-
-    public boolean disparar(int transicion)
-    {
-        List<Integer> sensibilizadas = getSensibilizadas();
-        if(!sensibilizadas.contains(transicion))
-        {
-            return false;
-        }
-
-        RealVector fila  = matrizIncidencia.getRowVector(transicion);
-        marcado = marcado.add(fila);
-        vectorDisparos.addToEntry(transicion,1); //suma 1 
-        return true;
     }
 
     public void imprimirMarcado()
@@ -89,10 +75,15 @@ public class RedDePetri {
         System.out.println();
     }
 
-    public RealVector EcuacionDeEstado()
+    public boolean EcuacionDeEstado(int transicion)
     {
-        RealVector ecuacion = matrizIncidencia.preMultiply(vectorDisparos).add(marcadoInicial);
-        return ecuacion;
+        vectorDisparos.setEntry(transicion, 1);
+        RealVector ecuacion = matrizIncidencia.operate(vectorDisparos).add(marcado);
+        vectorDisparos.setEntry(transicion, 0);
+        for (double v : ecuacion.toArray()) {
+            if (v < 0) return false;
+        }
+        marcado = ecuacion.copy();
+        return true;
     }
-
 }
