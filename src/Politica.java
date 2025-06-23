@@ -2,7 +2,6 @@ package src;
 
 import java.util.*;
 
-import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 public class Politica {
@@ -74,6 +73,14 @@ public class Politica {
     }
 
     private TipoProceso seleccionarPriorizado(RealVector resultado) {
+        if (resultado.getEntry(mapaClasificaion.get(TipoProceso.SIMPLE)) == 1.0) {
+            return TipoProceso.SIMPLE;
+        } else if (resultado.getEntry(mapaClasificaion.get(TipoProceso.INTERMEDIO)) == 1.0) {
+            return TipoProceso.INTERMEDIO;
 
+        } else if (resultado.getEntry(mapaClasificaion.get(TipoProceso.COMPLEJO)) == 1.0) {
+            return TipoProceso.COMPLEJO;
+        }
+        return null;
     }
 }
