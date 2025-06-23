@@ -8,52 +8,51 @@ import org.apache.commons.math3.linear.RealVector;
 
 public class Monitor implements MonitorInterface {
 
-    private final Semaphore mutex = new Semaphore(1,false);
+    private final Semaphore mutex = new Semaphore(1, false);
     private RedDePetri red;
     private Queues queues;
     private boolean disparoExitoso;
     private RealVector sensibilizadas;
     private RealVector quienesEstan;
 
-    public Monitor(RedDePetri red, Queues queues){
+    public Monitor(RedDePetri red, Queues queues) {
         this.red = red;
         this.queues = queues;
         disparoExitoso = true;
     }
-    
+
     @Override
     public boolean fireTransition(int transition) {
         RealVector resultado;
-        
+
         try {
             mutex.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        
+
         try {
 
             while (true) {
                 disparoExitoso = red.EcuacionDeEstado(transition);
-                if(disparoExitoso)
-                { 
+                if (disparoExitoso) {
                     System.out.println("Transicion " + transition);
                     // mostrar marcado actual
                     red.imprimirMarcado();
-                    
+
                     sensibilizadas = red.getSensibilizadas();
-                    quienesEstan   = queues.quienesEstan();
+                    quienesEstan = queues.quienesEstan();
                     resultado = sensibilizadas.ebeMultiply(quienesEstan);
+                    // resultado es la AND de las transiciones sensibilizadas y las q tienen hilos
+                    // para disparar esperando
 
                     if (resultado.getMaxValue() > 0) {
                         queues.release(resultado);
                         return true;
-                    } 
+                    }
 
                     return true;
-                } 
-                else 
-                {
+                } else {
                     mutex.release();
                     queues.acquire(transition);
                     try {
@@ -63,9 +62,8 @@ public class Monitor implements MonitorInterface {
                     }
                 }
             }
-        }
-        finally {
+        } finally {
             mutex.release();
-        } 
+        }
     }
 }
