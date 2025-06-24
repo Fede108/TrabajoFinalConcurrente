@@ -1,4 +1,5 @@
 package src;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class RedDePetri {
     private RealVector marcado;
     private RealVector marcadoInicial;
     private RealVector vectorDisparos;
+    private Log logger;
     
     /*
      * Constructor de la clase
@@ -31,6 +33,12 @@ public class RedDePetri {
         this.marcado = MatrixUtils.createRealVector(marcado);
         this.marcadoInicial = this.marcado.copy();
         this.vectorDisparos = new ArrayRealVector(this.matrizIncidencia.getColumnDimension());
+
+        try {
+            logger = new Log("transiciones.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -84,6 +92,7 @@ public class RedDePetri {
             if (v < 0) return false;
         }
         marcado = ecuacion.copy();
+        logger.log("T" + transicion);
         return true;
     }
 }
