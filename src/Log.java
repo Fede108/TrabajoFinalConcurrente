@@ -15,7 +15,7 @@ public class Log {
      */
     public Log(String filename) throws IOException {
         // true = append
-        writer = new BufferedWriter(new FileWriter(filename, true));
+        writer = new BufferedWriter(new FileWriter(filename, false));
     }
 
     /**

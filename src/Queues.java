@@ -58,4 +58,22 @@ public class Queues {
         }
     }
 
+    /**
+     * Libera todos los hilos que estén bloqueados en espera en cada semáforo de la cola. 
+     */
+    public void releaseAll() {
+        for (int i = 0; i < queues.size(); i++) {
+            Semaphore sem = queues.get(i);
+        
+            int esperando = sem.getQueueLength();
+            for (int k = 0; k < esperando; k++) {
+                sem.release();
+            }
+            if (esperando > 0) {
+                System.out.printf("ReleaseAll: liberados %d hilos en semáforo T%d%n", esperando, i);
+            }
+        }
+    }
+
+
 }
