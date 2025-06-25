@@ -3,10 +3,11 @@ package src;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Main {
      public static void main(String[] args) {
 
-//Orden de transiciones: T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
+            // T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
         double[][] matrizIncidencia = {
             {-1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1 },  // P0
             { 1, -1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },  // P1
@@ -21,7 +22,7 @@ public class Main {
             { 0,  0,  0,  0,  0,  0,  0,  0,  0,  1, -1,  0 },  // P10
             { 0,  0,  0,  0,  1,  0,  1,  0,  0,  0,  1, -1 },  // P11
         };
-        // Marcado inicial: tokens en P0, P1, ..., P6.
+        // Marcado inicial: tokens en P0, P2, ..., P6.
         double[] marcadoInicial = new double[] {
             3,  // P0
             0,  // P1
@@ -37,57 +38,48 @@ public class Main {
             0   // P11
         };
 
-        // Crear RedDePetri y estructuras de concurrencia
-        RedDePetri red = new RedDePetri(matrizIncidencia, marcadoInicial);
-        int numTransiciones = matrizIncidencia[0].length;
-        Queues queues = new Queues(numTransiciones);
-        Monitor monitor = new Monitor(red, queues);
+        // Crear RedDePetri y monitor de concurrencia
+        RedDePetri red  = new RedDePetri(matrizIncidencia, marcadoInicial);
+        Monitor monitor = new Monitor(red);
 
-        // Definir listas de transiciones para cada hilo:
-        // Hilo 1 intentará disparar T0 en ciclo
-        List<Integer> listaHilo1 = new ArrayList<>();
-        listaHilo1.add(0);
+        List<List<Integer>> transicionesPorSegmento = List.of(
+            List.of(0),            // segmento 1
+            List.of(1),            // segmento 2
+            List.of(2, 3, 4),      // segmento 3
+            List.of(5, 6),         // segmento 4
+            List.of(7, 8, 9, 10),  // segmento 5
+            List.of(11)            // segmento 6
+        );
+
+        int[] hilosPorSegmento = {
+            1,  // 3 hilos para T0
+            2,  // 1 hilo  para T1
+            1,  // 1 hilos para T2,T3,T4
+            1,  // 1 hilo  para T5,T6
+            1,  // 1 hilos para T7,T8,T9,T10
+            2   // 2 hilos para T11
+        };
+
+        // Crear y arrancar los hilos
+        List<Thread> hilos = new ArrayList<>();
         
-        // Hilo 2 intentará disparar T1 en ciclo
-        List<Integer> listaHilo2 = new ArrayList<>();
-        listaHilo2.add(1);
-        
-        // Hilo 3 intentará disparar T2,T3,T4 en ciclo
-        List<Integer> listaHilo3 = new ArrayList<>();
-        listaHilo3.add(2);
-        listaHilo3.add(3);
-        listaHilo3.add(4);
+        for (int i = 0; i < transicionesPorSegmento.size(); i++) {
+            List<Integer> lista = transicionesPorSegmento.get(i);
 
-        // Hilo 4 intentará disparar T5,T6 en ciclo
-        List<Integer> listaHilo4 = new ArrayList<>();
-        listaHilo4.add(5);
-        listaHilo4.add(6);
+            for (int nroHilo = 0; nroHilo < hilosPorSegmento[i]; nroHilo++) {
+                
+                String nombre = String.format("Segmento %d-Hilo %d", i + 1, nroHilo);
 
-        // Hilo 5 intentará disparar T7,T8,T9,T10 en ciclo
-        List<Integer> listaHilo5 = new ArrayList<>();
-        listaHilo5.add(7);
-        listaHilo5.add(8);
-        listaHilo5.add(9);
-        listaHilo5.add(10);
+                Thread hilo = new Thread( new Task(monitor, lista, i+1==transicionesPorSegmento.size()),nombre);
+                hilos.add(hilo);
+            }
+        }
 
-        // Hilo 6 intentará disparar T11 en ciclo
-        List<Integer> listaHilo6 = new ArrayList<>();
-        listaHilo6.add(11);
-
-        // Crear y arrancar hilos
-        Thread hilo1 = new Thread(new Task(monitor, listaHilo1, false), "Hilo-1");
-        Thread hilo2 = new Thread(new Task(monitor, listaHilo2, false), "Hilo-2");
-        Thread hilo3 = new Thread(new Task(monitor, listaHilo3, false), "Hilo-3");
-        Thread hilo4 = new Thread(new Task(monitor, listaHilo4, false), "Hilo-4");
-        Thread hilo5 = new Thread(new Task(monitor, listaHilo5, false), "Hilo-5");
-        Thread hilo6 = new Thread(new Task(monitor, listaHilo6, true), "Hilo-6");
-
-        hilo1.start();
-        hilo2.start();
-        hilo4.start();
-        hilo3.start();
-        hilo6.start();
-        hilo5.start();
-
+        hilos.forEach(Thread::start);
     }
 }
+
+        
+
+    
+

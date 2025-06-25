@@ -1,7 +1,5 @@
 package src;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -14,7 +12,6 @@ import org.apache.commons.math3.linear.RealVector;
 public class RedDePetri {
     private final RealMatrix matrizIncidencia;
     private RealVector marcado;
-    private RealVector marcadoInicial;
     private RealVector vectorDisparos;
     private Log logger;
     
@@ -31,7 +28,6 @@ public class RedDePetri {
     {
         this.matrizIncidencia = MatrixUtils.createRealMatrix(matrizIncidencia);
         this.marcado = MatrixUtils.createRealVector(marcado);
-        this.marcadoInicial = this.marcado.copy();
         this.vectorDisparos = new ArrayRealVector(this.matrizIncidencia.getColumnDimension());
 
         try {
@@ -41,13 +37,11 @@ public class RedDePetri {
         }
     }
 
-
-    private RealVector getTransition(int transicion)
+    public int getNumTransiciones()
     {
-        double[] vector = new double[matrizIncidencia.getRowDimension()];
-        vector[transicion] = 1.0;
-        return MatrixUtils.createRealVector(vector);
+        return matrizIncidencia.getColumnDimension();
     }
+
 
     public RealVector getSensibilizadas()
     {

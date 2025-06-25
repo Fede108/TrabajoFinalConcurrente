@@ -1,95 +1,111 @@
 package src;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-import java.util.concurrent.Semaphore;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 public class Monitor implements MonitorInterface {
-
-    private final Semaphore mutex = new Semaphore(1, false);
+    
+    private final ReentrantLock lock = new ReentrantLock(true);
+    private final Condition[] conds;
+    
     private RedDePetri red;
-    private Queues queues;
     private boolean disparoExitoso;
     private RealVector sensibilizadas;
     private RealVector quienesEstan;
     private boolean terminarEjecucion;
-    private boolean loocked =  false;
-
-    public Monitor(RedDePetri red, Queues queues) {
+    
+    public Monitor(RedDePetri red) {
         this.red = red;
-        this.queues = queues;
         disparoExitoso = true;
         terminarEjecucion = false;
+
+        quienesEstan = new ArrayRealVector(red.getNumTransiciones());
+
+        conds = new Condition[red.getNumTransiciones()];
+        for (int i = 0; i < red.getNumTransiciones(); i++) {
+            conds[i] = lock.newCondition();
+        }
+    }
+
+    private void quienesEstan() {
+        for (int i = 0; i < red.getNumTransiciones(); i++) {
+            quienesEstan.setEntry(i, lock.hasWaiters(conds[i]) ? 1.0 : 0.0);
+        }
     }
 
     @Override
-    public boolean fireTransition(int transition) {
-        RealVector resultado;
-        
-        try {
-            mutex.acquire();
-            loocked = true;
-            System.out.println("monitor ocupado");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+    public boolean fireTransition(int t) {
+        lock.lock();
+        System.out.println("monitor ocupado " + t);
+        // Si t es -1, se indica que se debe terminar la ejecución
         try {
         
-            while (true) {
-
-                if (transition == -1) {
+            if (t == -1){
+                    // terminar ejecución: despertar a todos
+                    for (Condition c : conds) c.signalAll();
                     terminarEjecucion = true;
-                    queues.releaseAll();
                     return true;
-                }
+            }
+
+            while (true){
 
                 if (terminarEjecucion) {
+                    for (Condition c : conds) c.signalAll();
                     return false;
                 }
 
-                disparoExitoso = red.EcuacionDeEstado(transition);
+                disparoExitoso = red.EcuacionDeEstado(t);
                 if (disparoExitoso) {
                    // mostrar marcado actual
-                   // System.out.println(transition);
-                   // System.out.println("disparo exitoso");
-                   // red.imprimirMarcado();
+                    System.out.println(t + " disparo exitoso");
+                    red.imprimirMarcado();
                 
                     sensibilizadas = red.getSensibilizadas();
-                    quienesEstan = queues.quienesEstan();
-                    resultado = sensibilizadas.ebeMultiply(quienesEstan);
+                    System.out.println("sensibilizadas " +  sensibilizadas);
+                   
+                    quienesEstan();
+                    System.out.println("quienesEstan " + quienesEstan);
+
+                    RealVector resultado = sensibilizadas.ebeMultiply(quienesEstan);
                     // resultado es la AND de las transiciones sensibilizadas y las q tienen hilos
                     // para disparar esperando
 
                     if (resultado.getMaxValue() > 0) {
-                        queues.release(resultado);
-                        return true;
+                        // Elegir un índice aleatorio donde resultado es mayor que 0
+                        List<Integer> indices = new ArrayList<>();
+                        for (int i = 0; i < resultado.getDimension(); i++) {
+                            if (resultado.getEntry(i) > 0) {
+                                indices.add(i);
+                            }
+                        }
+                        if (!indices.isEmpty()) {
+                            int elegido = indices.get((int) (Math.random() * indices.size()));
+                            conds[elegido].signal();
+                        }
                     }
+
                     return true;
                 } else {
-                    if (loocked) {
-                        loocked = false;
-                        System.out.println("monitor liberado");
-                        mutex.release();
-                    }
-                    
-                    queues.acquire(transition);
+                    System.out.println(t + " disparo fallido");
+                    System.out.println(t + " monitor liberado");
+                    // disparo fallido se espera en la variable de condición t
                     try {
-                        mutex.acquire();
-                        loocked = true;
-                        System.out.println("monitor ocupado");
+                        conds[t].await();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
-                    }
+                    }   
+                    // al volver de await tenemos el lock de nuevo y repetimos
+                    System.out.println("monitor ocupado " + t);  
                 }
             }
         } finally {
-            System.out.println("monitor liberado");
-            if (loocked) {
-                loocked = false;
-                mutex.release();
-                
-            }
+            System.out.println(t + " monitor liberado");
+            lock.unlock();
         }
     }
 }
