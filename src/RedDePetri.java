@@ -14,7 +14,11 @@ public class RedDePetri {
     private RealVector marcado;
     private RealVector vectorDisparos;
     private Log logger;
-    
+    private RealVector timeAlfa;
+    private RealVector timeStamp;
+    private RealVector flagEspera;
+    private double inicioPrograma;
+
     /*
      * Constructor de la clase
      * 
@@ -24,11 +28,17 @@ public class RedDePetri {
 
 
 
-    public RedDePetri(double[][] matrizIncidencia, double[] marcado)
+    public RedDePetri(double[][] matrizIncidencia, double[] marcado, double[] sensibilizadasConTiempo)
     {
         this.matrizIncidencia = MatrixUtils.createRealMatrix(matrizIncidencia);
         this.marcado = MatrixUtils.createRealVector(marcado);
         this.vectorDisparos = new ArrayRealVector(this.matrizIncidencia.getColumnDimension());
+
+
+        timeAlfa   = MatrixUtils.createRealVector(sensibilizadasConTiempo);
+        timeStamp  = new ArrayRealVector(matrizIncidencia[0].length);
+        flagEspera = new ArrayRealVector(matrizIncidencia[0].length);
+        inicioPrograma = System.currentTimeMillis();
 
         try {
             logger = new Log("transiciones.txt");
@@ -45,14 +55,14 @@ public class RedDePetri {
 
     public RealVector getSensibilizadas()
     {
-        int numTrans = matrizIncidencia.getColumnDimension(); // 6
+        int numTrans = matrizIncidencia.getColumnDimension(); 
         RealVector sensibilizadas = new ArrayRealVector(numTrans);
 
         for(int transicion = 0; transicion<numTrans; transicion++)
         {
             RealVector columna   = matrizIncidencia.getColumnVector(transicion);
             RealVector resultado = marcado.add(columna);
-            boolean valido = true;
+            boolean    valido    = true;
             for(double valor: resultado.toArray())
             {
                 if(valor<0)
@@ -69,24 +79,82 @@ public class RedDePetri {
 
     public void imprimirMarcado()
     {
-        System.out.print("Marcado actual: ");
+        System.out.print("Marcado actual:[ ");
         for(double token: marcado.toArray())
         {
             System.out.print((int) token + " ");
         }
-        System.out.println();
+        System.out.println("]");
     }
 
     public boolean EcuacionDeEstado(int transicion)
     {
+        RealVector ecuacion, sensibilizadas, nuevasSensibilizadas;
         vectorDisparos.setEntry(transicion, 1);
-        RealVector ecuacion = matrizIncidencia.operate(vectorDisparos).add(marcado);
+        ecuacion = matrizIncidencia.operate(vectorDisparos).add(marcado);
         vectorDisparos.setEntry(transicion, 0);
-        for (double v : ecuacion.toArray()) {
+
+        for (double v : ecuacion.toArray()) 
+        {
             if (v < 0) return false;
         }
+        System.out.printf("T%d disparada(Thread: %s)\n", transicion, Thread.currentThread().getName());
+        
+        sensibilizadas  = getSensibilizadas();
         marcado = ecuacion.copy();
+        nuevasSensibilizadas = getSensibilizadas();
+        iniciarTiempo(sensibilizadas, nuevasSensibilizadas);
+
         logger.log("T" + transicion);
         return true;
+    }
+
+    private void iniciarTiempo(RealVector anterior, RealVector nuevo){
+        RealVector delta = nuevo.subtract(anterior);
+        for(int i=0; i<delta.getDimension(); i++){
+            if (timeAlfa.getEntry(i) > 0.0) 
+            {
+                if(delta.getEntry(i) > 0)
+                {
+                    timeStamp.setEntry(i, System.currentTimeMillis());
+
+                    double time = System.currentTimeMillis() - inicioPrograma;
+                    System.out.printf("T%d tiempo de inicio %f ms\n", i, time);
+                } 
+            }
+        }
+    }
+
+    public int hilosEsperando(int t) {
+        if (flagEspera.getEntry(t) == 1.0) {
+            // Tiempo espera minimo hasta que se vuelva a sensibilizar la transición
+            return (int) Math.max(0, getSleepTime(t) - 50); // 50 ms de margen
+        }
+        return 0;
+    }
+
+    public boolean testVentanadeTiempo(int t){
+        if (timeAlfa.getEntry(t) <= 0.0) {
+            return true; // No hay restricción de tiempo para esta transición
+        }
+
+        double tiempoTranscurrido = System.currentTimeMillis() - timeStamp.getEntry(t);
+        System.out.printf("T%d tiempo transcurrido %f ms (Thread: %s) \n", t, tiempoTranscurrido , Thread.currentThread().getName());
+        if(tiempoTranscurrido >= timeAlfa.getEntry(t)){
+            flagEspera.setEntry(t, 0.0);
+            return true; // La transición puede dispararse
+        } else {
+            return false; // La transición no puede dispararse
+        }
+    }
+
+    public boolean estaSensibilizada(int t) {
+        return getSensibilizadas().getEntry(t) > 0.0;
+    }
+
+    public int getSleepTime(int t) {
+        double time = timeStamp.getEntry(t) + timeAlfa.getEntry(t) - System.currentTimeMillis();
+        flagEspera.setEntry(t, 1.0);
+        return (int) Math.max(0, time);
     }
 }

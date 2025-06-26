@@ -37,9 +37,11 @@ public class Main {
             0,  // P10
             0   // P11
         };
+                                                        // T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
+        double[] sensibilizadasConTiempo = new double[] { 0, 100, 0, 0, 200, 0 , 150, 350, 0, 250, 400, 0 }; //ms
 
         // Crear RedDePetri y monitor de concurrencia
-        RedDePetri red  = new RedDePetri(matrizIncidencia, marcadoInicial);
+        RedDePetri red  = new RedDePetri(matrizIncidencia, marcadoInicial, sensibilizadasConTiempo);
         Monitor monitor = new Monitor(red);
 
         List<List<Integer>> transicionesPorSegmento = List.of(
@@ -52,8 +54,8 @@ public class Main {
         );
 
         int[] hilosPorSegmento = {
-            1,  // 3 hilos para T0
-            2,  // 1 hilo  para T1
+            1,  // 1 hilos para T0
+            2,  // 2 hilo  para T1
             1,  // 1 hilos para T2,T3,T4
             1,  // 1 hilo  para T5,T6
             1,  // 1 hilos para T7,T8,T9,T10
@@ -74,7 +76,6 @@ public class Main {
                 hilos.add(hilo);
             }
         }
-
         hilos.forEach(Thread::start);
     }
 }

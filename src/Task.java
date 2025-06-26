@@ -29,7 +29,7 @@ public class Task implements Runnable{
 
             if (segmentoFinal) {
                 nro_invariante.getAndIncrement();
-                if (nro_invariante.get()==100) {
+                if (nro_invariante.get()==200) {
                     monitor.fireTransition(-1);
                     break;
                 }
