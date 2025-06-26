@@ -3,8 +3,6 @@ package src;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math3.linear.RealVector;
-
 
 public class Main {
      public static void main(String[] args) {
@@ -39,12 +37,13 @@ public class Main {
             0,  // P10
             0   // P11
         };
-                                                        // T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
-        double[] sensibilizadasConTiempo = new double[] { 0, 100, 0, 0, 200, 0 , 150, 350, 0, 250, 400, 0 }; //ms
+                                                    //   T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
+        double[] sensibilizadasConTiempo = new double[] { 0, 100, 0, 0, 200, 0 , 50, 0, 50, 250, 400, 0 }; //ms
 
         // Crear RedDePetri y monitor de concurrencia
         RedDePetri red  = new RedDePetri(matrizIncidencia, marcadoInicial, sensibilizadasConTiempo);
-        Monitor monitor = new Monitor(red);
+        Politica politica = new Politica(Politica.TipoPolitica.PRIORIZADA);
+        Monitor monitor = new Monitor(red,politica);
 
         List<List<Integer>> transicionesPorSegmento = List.of(
             List.of(0),            // segmento 1
@@ -57,11 +56,11 @@ public class Main {
 
         int[] hilosPorSegmento = {
             1,  // 1 hilos para T0
-            2,  // 2 hilo  para T1
+            1,  // 2 hilo  para T1
             1,  // 1 hilos para T2,T3,T4
             1,  // 1 hilo  para T5,T6
             1,  // 1 hilos para T7,T8,T9,T10
-            2   // 2 hilos para T11
+            1   // 2 hilos para T11
         };
 
         // Crear y arrancar los hilos
@@ -79,42 +78,7 @@ public class Main {
             }
         }
         hilos.forEach(Thread::start);
-        
-        for (Thread hilo : hilos) {
-        try {
-            hilo.join();
-            } catch (InterruptedException e) {
-                 e.printStackTrace();
-            }
-        }
-
-
-    System.out.println("\tPRUEBA POLÍTICA");
-    Politica politica = new Politica(Politica.TipoPolitica.ALEATORIA);
-    RealVector sensibilizadas = red.getSensibilizadas();
-
-
-// Seleccionar una clase de proceso habilitada
-    Politica.TipoProceso modo = politica.seleccionarModo(sensibilizadas);
-
-    if (modo != null) {
-        int transicion = politica.getTransicion(modo);
-        boolean ok = red.EcuacionDeEstado(transicion);
-        System.out.println("T" + transicion + (ok ? " disparada." : " no disparada."));
-        red.imprimirMarcado();
     }
-    else {
-        System.out.println("Ningún proceso seleccionable por la política.");
-        System.out.print("Transiciones sensibilizadas: ");
-        for (int i = 0; i < sensibilizadas.getDimension(); i++) {
-            if (sensibilizadas.getEntry(i) == 1.0) {
-                System.out.print("T" + i + " ");
-            }
-        }
-        System.out.println(); // Salto de línea final
-        }
-    }
-
 }
 
 

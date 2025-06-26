@@ -1,7 +1,5 @@
 package src;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,12 +14,14 @@ public class Monitor implements MonitorInterface {
     private final Condition[] esperas;
     
     private RedDePetri red;
+    private Politica politica;
     private RealVector sensibilizadas;
     private RealVector quienesEstan;
     private boolean terminarEjecucion;
     
-    public Monitor(RedDePetri red) {
+    public Monitor(RedDePetri red, Politica politica) {
         this.red = red;
+        this.politica = politica;
         terminarEjecucion = false;
 
         quienesEstan = new ArrayRealVector(red.getNumTransiciones());
@@ -78,22 +78,12 @@ public class Monitor implements MonitorInterface {
                     // resultado es la AND de las transiciones sensibilizadas y las q tienen hilos
                     // para disparar esperando
 
-                    if (resultado.getMaxValue() > 0) {
-
-                        // Elegir un índice aleatorio donde resultado es mayor que 0
-                        List<Integer> indices = new ArrayList<>();
-                        for (int i = 0; i < resultado.getDimension(); i++) {
-                            if (resultado.getEntry(i) > 0) {
-                                indices.add(i);
-                            }
-                        }
-                        if (!indices.isEmpty()) {
-                            int elegido = indices.get((int) (Math.random() * indices.size()));
-
-                            conds[elegido].signal();
-                        }
-                    }
+                    Integer elegido = politica.seleccionarTransicion(resultado);
+                    if(elegido != null) {
+                        conds[elegido].signal();
+                    }  
                     return true;
+                   
                 } else {
                     if (red.estaSensibilizada(t)) {
                        

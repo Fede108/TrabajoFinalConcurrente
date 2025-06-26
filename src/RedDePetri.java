@@ -127,7 +127,7 @@ public class RedDePetri {
 
     public int hilosEsperando(int t) {
         if (flagEspera.getEntry(t) == 1.0) {
-            // Tiempo espera minimo hasta que se vuelva a sensibilizar la transición
+            // Tiempo espera minimo hasta que se desensibiliza la transición
             return (int) Math.max(0, getSleepTime(t) - 50); // 50 ms de margen
         }
         return 0;

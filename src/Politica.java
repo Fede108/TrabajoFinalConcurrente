@@ -33,28 +33,26 @@ public class Politica {
 
     }
 
-    public TipoProceso seleccionarModo(RealVector resultado) {
+    public Integer seleccionarTransicion(RealVector resultado) {
         if (tipo == TipoPolitica.ALEATORIA) {
             return seleccionarAleatorio(resultado);
-        } else if (tipo == TipoPolitica.PRIORIZADA) {
-            return seleccionarPriorizado(resultado);
         } else {
-            throw new IllegalArgumentException("Política desconocida");
-        }
+            return seleccionarPriorizado(resultado);
+        } 
     }
 
-    private TipoProceso seleccionarAleatorio(RealVector resultado) {
-        /*
-         * Recibe como parametro el Vector resultado,contiene las transiciones
-         * sensibilizadas
-         * y que tienen hilos esperando
-         */
-        List<TipoProceso> disponibles = new ArrayList<>();
+    /*
+     * Recibe como parametro el Vector resultado,contiene las transiciones
+     * sensibilizadas y que tienen hilos esperando
+     */
+    private Integer seleccionarAleatorio(RealVector resultado) {
+      
+        List<Integer> disponibles = new ArrayList<>();
         // crea un ArrayList para almacenar los tipos de Procesos que estan habilitados
         // segun el vector
-        for (Map.Entry<TipoProceso, Integer> entry : mapaClasificaion.entrySet()) {
-            if (resultado.getEntry(entry.getValue()) == 1.0) {
-                disponibles.add(entry.getKey());
+        for (int i = 0; i < resultado.getDimension(); i++) {
+            if (resultado.getEntry(i) == 1.0) {
+                disponibles.add(i);
                 /*
                  * verifica si el valor de la posicion del vector == 1 y dependiendo cuales
                  * tenga en 1, va a agregar el tipo de proceso a la nuevo ArrayList
@@ -68,18 +66,25 @@ public class Politica {
             return null;
 
         return disponibles.get(random.nextInt(disponibles.size()));
-        // Selecciona un proceso al azar usando un Random
+        // Selecciona una transicion al azar usando un Random
 
     }
 
-    private TipoProceso seleccionarPriorizado(RealVector resultado) {
-        if (resultado.getEntry(mapaClasificaion.get(TipoProceso.SIMPLE)) == 1.0) {
-            return TipoProceso.SIMPLE;
-        } else if (resultado.getEntry(mapaClasificaion.get(TipoProceso.INTERMEDIO)) == 1.0) {
-            return TipoProceso.INTERMEDIO;
-
-        } else if (resultado.getEntry(mapaClasificaion.get(TipoProceso.COMPLEJO)) == 1.0) {
-            return TipoProceso.COMPLEJO;
+    private Integer seleccionarPriorizado(RealVector resultado) {
+        Integer transicionSeleccionada = seleccionarAleatorio(resultado);
+        if (transicionSeleccionada != null &&
+            (transicionSeleccionada.equals(mapaClasificaion.get(TipoProceso.SIMPLE)) ||
+             transicionSeleccionada.equals(mapaClasificaion.get(TipoProceso.INTERMEDIO)) ||
+             transicionSeleccionada.equals(mapaClasificaion.get(TipoProceso.COMPLEJO)))) 
+        {
+            if (resultado.getEntry(mapaClasificaion.get(TipoProceso.SIMPLE)) == 1.0) {
+                return mapaClasificaion.get(TipoProceso.SIMPLE);
+            } else{
+                   return transicionSeleccionada;
+            }
+          
+        } else if (transicionSeleccionada != null) {
+            return transicionSeleccionada;
         }
         return null;
     }
