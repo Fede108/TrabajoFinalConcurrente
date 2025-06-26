@@ -45,7 +45,7 @@ public class Politica {
 
     private TipoProceso seleccionarAleatorio(RealVector resultado) {
         /*
-         * Recibe como paramtro el Vector resultado,contiene las transiciones
+         * Recibe como parametro el Vector resultado,contiene las transiciones
          * sensibilizadas
          * y que tienen hilos esperando
          */
@@ -82,5 +82,9 @@ public class Politica {
             return TipoProceso.COMPLEJO;
         }
         return null;
+    }
+
+    public int getTransicion(TipoProceso tipo) {
+        return mapaClasificaion.get(tipo);
     }
 }

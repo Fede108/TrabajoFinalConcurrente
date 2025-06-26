@@ -3,6 +3,8 @@ package src;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.linear.RealVector;
+
 
 public class Main {
      public static void main(String[] args) {
@@ -76,8 +78,44 @@ public class Main {
         }
 
         hilos.forEach(Thread::start);
+        
+        for (Thread hilo : hilos) {
+        try {
+            hilo.join();
+            } catch (InterruptedException e) {
+                 e.printStackTrace();
+            }
+        }
+
+
+    System.out.println("\tPRUEBA POLÍTICA");
+    Politica politica = new Politica(Politica.TipoPolitica.ALEATORIA);
+    RealVector sensibilizadas = red.getSensibilizadas();
+
+
+// Seleccionar una clase de proceso habilitada
+    Politica.TipoProceso modo = politica.seleccionarModo(sensibilizadas);
+
+    if (modo != null) {
+        int transicion = politica.getTransicion(modo);
+        boolean ok = red.EcuacionDeEstado(transicion);
+        System.out.println("T" + transicion + (ok ? " disparada." : " no disparada."));
+        red.imprimirMarcado();
     }
+    else {
+        System.out.println("Ningún proceso seleccionable por la política.");
+        System.out.print("Transiciones sensibilizadas: ");
+        for (int i = 0; i < sensibilizadas.getDimension(); i++) {
+            if (sensibilizadas.getEntry(i) == 1.0) {
+                System.out.print("T" + i + " ");
+            }
+        }
+        System.out.println(); // Salto de línea final
+        }
+    }
+
 }
+
 
         
 
