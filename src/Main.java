@@ -38,7 +38,7 @@ public class Main {
             0   // P11
         };
                                                     //   T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
-        double[] sensibilizadasConTiempo = new double[] { 0, 100, 0, 0, 200, 0 , 50, 0, 50, 250, 400, 0 }; //ms
+        double[] sensibilizadasConTiempo = new double[] { 0, 30, 0, 0, 200, 0 , 50, 0, 50, 250, 40, 0 }; //ms
 
         // Crear RedDePetri y monitor de concurrencia
         RedDePetri red  = new RedDePetri(matrizIncidencia, marcadoInicial, sensibilizadasConTiempo);
@@ -73,7 +73,7 @@ public class Main {
                 
                 String nombre = String.format("Segmento %d-Hilo %d", i + 1, nroHilo);
 
-                Thread hilo = new Thread( new Task(monitor, lista, i+1==transicionesPorSegmento.size()),nombre);
+                Thread hilo = new Thread( new Task(monitor, lista),nombre);
                 hilos.add(hilo);
             }
         }

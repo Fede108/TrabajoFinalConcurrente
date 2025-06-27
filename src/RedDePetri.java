@@ -102,9 +102,13 @@ public class RedDePetri {
         marcado         = ecuacion.copy();
         nuevasSen       = getSensibilizadas();
         iniciarTiempo(sensibilizadas, nuevasSen);
-        setNumeroInvariantes(transicion);
+        setInvariantesCompletados(transicion);
         logger.log("T" + transicion);
-        return true;
+        if (getInvariantesCompletados()) {
+            double tiempo = (System.currentTimeMillis() - inicioPrograma) / 1000.0; 
+            logger.log("\nTiempo de ejecucion: " + tiempo + " segundos");
+        }
+        return verificarInvariantes(marcado);
     }
 
     private void iniciarTiempo(RealVector anterior, RealVector nuevo){
@@ -156,7 +160,7 @@ public class RedDePetri {
         return (int) Math.max(0, time);
     }
 
-    public void setNumeroInvariantes(int t) {
+    public void setInvariantesCompletados(int t) {
         if (t == 11) {
             completados++;
         }
@@ -181,6 +185,5 @@ public class RedDePetri {
         }
 
         return false;
-
     }
 }

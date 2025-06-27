@@ -23,7 +23,7 @@ public class Politica {
 
     public Politica(TipoPolitica tipo) {
 
-        this.tipo = tipo; // iniciliza la politica con alguno de los 2 tipos
+        this.tipo = tipo; // inicializa la politica con alguno de los 2 tipos
         this.random = new Random();
         this.mapaClasificaion = new HashMap<>();
 
@@ -87,9 +87,5 @@ public class Politica {
             return transicionSeleccionada;
         }
         return null;
-    }
-
-    public int getTransicion(TipoProceso tipo) {
-        return mapaClasificaion.get(tipo);
     }
 }

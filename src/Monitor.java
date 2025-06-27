@@ -17,12 +17,10 @@ public class Monitor implements MonitorInterface {
     private Politica politica;
     private RealVector sensibilizadas;
     private RealVector quienesEstan;
-    private boolean terminarEjecucion;
     
     public Monitor(RedDePetri red, Politica politica) {
         this.red = red;
         this.politica = politica;
-        terminarEjecucion = false;
 
         quienesEstan = new ArrayRealVector(red.getNumTransiciones());
 
@@ -44,17 +42,9 @@ public class Monitor implements MonitorInterface {
     public boolean fireTransition(int t) {
         lock.lock();
         System.out.printf("T%d monitor ocupado \n", t);
-        // Si t es -1, se indica que se debe terminar la ejecución
+    
         try {
         
-          //  if (t == -1){
-          //          // terminar ejecución: despertar a todos
-          //          for (Condition e : esperas) e.signalAll();
-          //          for (Condition c : conds) c.signalAll();
-          //          terminarEjecucion = true;
-          //          return true;
-          //  }
-
             while (true){
 
                 if (red.getInvariantesCompletados()) {   // terminar ejecución: despertar a todos
