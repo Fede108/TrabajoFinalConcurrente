@@ -7,8 +7,6 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 
-
-
 public class RedDePetri {
     private final RealMatrix matrizIncidencia;
     private RealVector marcado;
@@ -18,6 +16,7 @@ public class RedDePetri {
     private RealVector timeStamp;
     private RealVector flagEspera;
     private double inicioPrograma;
+    private int completados = 0; // Variable to track completed invariants
 
     /*
      * Constructor de la clase
@@ -25,8 +24,6 @@ public class RedDePetri {
      * @param matrizIncidencia matriz de incidencia de la RdP
      * @param marcado marcado incial de la RdP
      */
-
-
 
     public RedDePetri(double[][] matrizIncidencia, double[] marcado, double[] sensibilizadasConTiempo)
     {
@@ -39,6 +36,7 @@ public class RedDePetri {
         timeStamp  = new ArrayRealVector(matrizIncidencia[0].length);
         flagEspera = new ArrayRealVector(matrizIncidencia[0].length);
         inicioPrograma = System.currentTimeMillis();
+
 
         try {
             logger = new Log("transiciones.txt");
@@ -89,7 +87,7 @@ public class RedDePetri {
 
     public boolean EcuacionDeEstado(int transicion)
     {
-        RealVector ecuacion, sensibilizadas, nuevasSensibilizadas;
+        RealVector ecuacion, sensibilizadas, nuevasSen;
         vectorDisparos.setEntry(transicion, 1);
         ecuacion = matrizIncidencia.operate(vectorDisparos).add(marcado);
         vectorDisparos.setEntry(transicion, 0);
@@ -101,10 +99,10 @@ public class RedDePetri {
         System.out.printf("T%d disparada(Thread: %s)\n", transicion, Thread.currentThread().getName());
         
         sensibilizadas  = getSensibilizadas();
-        marcado = ecuacion.copy();
-        nuevasSensibilizadas = getSensibilizadas();
-        iniciarTiempo(sensibilizadas, nuevasSensibilizadas);
-
+        marcado         = ecuacion.copy();
+        nuevasSen       = getSensibilizadas();
+        iniciarTiempo(sensibilizadas, nuevasSen);
+        setNumeroInvariantes(transicion);
         logger.log("T" + transicion);
         return true;
     }
@@ -157,4 +155,15 @@ public class RedDePetri {
         flagEspera.setEntry(t, 1.0);
         return (int) Math.max(0, time);
     }
+
+    public void setNumeroInvariantes(int t) {
+        if (t == 11) {
+            completados++;
+        }
+    }
+
+    public boolean getInvariantesCompletados(){
+        return completados == 150; // Verifica si se han completado los 15 invariantes
+    }
+
 }

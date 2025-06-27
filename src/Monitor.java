@@ -47,17 +47,17 @@ public class Monitor implements MonitorInterface {
         // Si t es -1, se indica que se debe terminar la ejecución
         try {
         
-            if (t == -1){
-                    // terminar ejecución: despertar a todos
-                    for (Condition e : esperas) e.signalAll();
-                    for (Condition c : conds) c.signalAll();
-                    terminarEjecucion = true;
-                    return true;
-            }
+          //  if (t == -1){
+          //          // terminar ejecución: despertar a todos
+          //          for (Condition e : esperas) e.signalAll();
+          //          for (Condition c : conds) c.signalAll();
+          //          terminarEjecucion = true;
+          //          return true;
+          //  }
 
             while (true){
 
-                if (terminarEjecucion) {
+                if (red.getInvariantesCompletados()) {   // terminar ejecución: despertar a todos
                     for (Condition e : esperas) e.signalAll();
                     for (Condition c : conds) c.signalAll();
                     return false;

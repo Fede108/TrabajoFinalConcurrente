@@ -27,13 +27,13 @@ public class Task implements Runnable{
                 break;
             }
 
-            if (segmentoFinal) {
-                nro_invariante.getAndIncrement();
-                if (nro_invariante.get()==15) {
-                    monitor.fireTransition(-1);
-                    break;
-                }
-            }
+         //   if (segmentoFinal) {
+         //       nro_invariante.getAndIncrement();
+         //       if (nro_invariante.get()==15) {
+         //         //  monitor.fireTransition(-1);
+         //           break;
+         //       }
+         //   }
             // Avanzar al siguiente en la lista (cíclico)
             idx = (idx + 1) % transiciones.size();
         }
