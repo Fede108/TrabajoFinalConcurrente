@@ -166,4 +166,21 @@ public class RedDePetri {
         return completados == 150; // Verifica si se han completado los 15 invariantes
     }
 
+    public boolean verificarInvariantes(RealVector marcado)
+    {
+        double suma1 = marcado.getEntry(0) + marcado.getEntry(1) + marcado.getEntry(10) + marcado.getEntry(11) + marcado.getEntry(3) + marcado.getEntry(4) +
+        marcado.getEntry(5) + marcado.getEntry(7) + marcado.getEntry(8) + marcado.getEntry(9);
+
+        double suma2 = marcado.getEntry(1) + marcado.getEntry(2);
+
+        double suma3 = marcado.getEntry(10) + marcado.getEntry(4) + marcado.getEntry(5) + marcado.getEntry(6) + marcado.getEntry(7) + marcado.getEntry(8) + marcado.getEntry(9);
+
+        if(suma1 == 3.0 && suma2 == 1.0 && suma3 == 1.0)
+        {
+            return true;
+        }
+
+        return false;
+
+    }
 }
